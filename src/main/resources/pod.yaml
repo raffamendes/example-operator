@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: quarkus-operator-example
+spec:
+  containers:
+  - name: quarkus-operator-example
+    image: https://quay.io/repository/rcmendes/operator-example
+    command: ["echo"]
+    args: ["$MESSAGE"]

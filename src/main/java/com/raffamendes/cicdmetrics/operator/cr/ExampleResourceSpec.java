@@ -12,20 +12,31 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class ExampleResourceSpec {
 	
-	@JsonProperty("specialRoles")
-	private Set<String> specialRoles;
-
-	public Set<String> getSpecialRoles() {
-		return specialRoles;
-	}
-
-	public void setSpecialRoles(Set<String> specialRoles) {
-		this.specialRoles = specialRoles;
-	}
+	@JsonProperty("messageParts")
+	private Set<String> messageParts;
 	
+	@JsonProperty("namespace")
+	private String namespace;
+		
 	@Override
 	public String toString() {
-		return "specialRoles="+ Arrays.toString(specialRoles.toArray(new String[] {}));
+		return "messageParts="+ Arrays.toString(messageParts.toArray(new String[] {}))+"\namespace="+namespace;
+	}
+
+	public Set<String> getMessageParts() {
+		return messageParts;
+	}
+
+	public void setMessageParts(Set<String> messageParts) {
+		this.messageParts = messageParts;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
 	}
 
 }
