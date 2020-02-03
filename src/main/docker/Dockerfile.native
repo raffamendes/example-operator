@@ -7,7 +7,7 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native -t quarkus/cicd-operator .
+# docker build -f src/main/docker/Dockerfile.native -t quarkus/example-operator .
 #
 # Then run the container using:
 #
@@ -17,6 +17,7 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal
 WORKDIR /work/
 COPY target/*-runner /work/application
-RUN chmod 775 /work
+COPY src/main/docker/libsunec.so /work/library/
+RUN chmod -R 775 /work
 EXPOSE 8080
-CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]
+CMD ["./application", "-Dquarkus.http.host=0.0.0.0", "-Djava.library.path=/work/library"]

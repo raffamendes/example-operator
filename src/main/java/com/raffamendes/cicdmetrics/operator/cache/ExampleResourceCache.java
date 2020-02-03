@@ -38,7 +38,8 @@ public class ExampleResourceCache {
 	    try {
 
 	      // list
-
+	    	System.out.println("Executing list and watch");
+          crClient.list().getItems().forEach(resource -> {System.out.println(resource.toString());});
 	      crClient
 	          .list()
 	          .getItems()

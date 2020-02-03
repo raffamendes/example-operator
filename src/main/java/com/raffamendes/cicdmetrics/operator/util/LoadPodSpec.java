@@ -20,12 +20,12 @@ public class LoadPodSpec {
 	@ConfigProperty(name = "pod.spec.containers.image")	
 	private String image;
 	
-	@ConfigProperty(name = "pod.spec.containers.command")
-	private String command;
-	
-	@ConfigProperty(name = "pod.spec.containers.args")
-	private String args;
-	
+//	@ConfigProperty(name = "pod.spec.containers.command")
+//	private String command;
+//	
+//	@ConfigProperty(name = "pod.spec.containers.args")
+//	private String args;
+//	
 	@ConfigProperty(name = "pod.metadata.name")
 	private String podName;
 	
@@ -40,7 +40,6 @@ public class LoadPodSpec {
 		return spec;
 	}
 	
-	//TODO change from this manual approach to load from a yaml file from classpath
 	public Pod instantiatePod(String namespace) {
 		Pod p = new Pod();
 		p.setApiVersion(apiVersion);
@@ -51,7 +50,7 @@ public class LoadPodSpec {
 	
 	private ObjectMeta createMeta(String namespace) {
 		ObjectMeta meta = new ObjectMeta();
-		meta.setName(podName);
+		meta.setGenerateName(podName);
 		meta.setNamespace(namespace);
 		return meta;
 	}
@@ -61,8 +60,6 @@ public class LoadPodSpec {
 		Container c = new Container();
 		c.setName(containerName);
 		c.setImage(image);
-		c.setCommand(Arrays.asList(new String[] {command}));
-		c.setArgs(Arrays.asList(new String[] {args}));
 		return c;
 	}
 

@@ -59,6 +59,6 @@ public class PodInitializer {
 		var.setName("MESSAGE");
 		var.setValue(String.join(" ", resource.getSpec().getMessageParts()));
 		p.getSpec().getContainers().get(0).setEnv(Arrays.asList(new EnvVar[] {var}));
-		client.pods().create(p);		
+		client.pods().inNamespace(resource.getSpec().getNamespace()).create(p);		
 	}
 }
