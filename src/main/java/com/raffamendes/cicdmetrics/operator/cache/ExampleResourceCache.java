@@ -21,75 +21,85 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 
 @ApplicationScoped
 public class ExampleResourceCache {
-	
+
 	private final Map<String, ExampleResource> cache = new ConcurrentHashMap<>();
 
-	  @Inject
-	  private NonNamespaceOperation<ExampleResource, ExampleResourceList, ExampleResourceDoneable, Resource<ExampleResource, ExampleResourceDoneable>> crClient;
+	@Inject
+	private NonNamespaceOperation<ExampleResource, ExampleResourceList, ExampleResourceDoneable, Resource<ExampleResource, ExampleResourceDoneable>> crClient;
 
-	  private Executor executor = Executors.newSingleThreadExecutor();
+	private Executor executor = Executors.newSingleThreadExecutor();
 
-	  public ExampleResource get(String uid) {
-	    return cache.get(uid);
-	  }
+	public ExampleResource get(String uid) {
+		return cache.get(uid);
+	}
 
-	  public void listThenWatch(BiConsumer<Watcher.Action, String> callback) {
+	public void listThenWatch(BiConsumer<Watcher.Action, String> callback) {
 
-	    try {
+		try {
 
-	      // list
-	    	System.out.println("Executing list and watch");
-          crClient.list().getItems().forEach(resource -> {System.out.println(resource.toString());});
-	      crClient
-	          .list()
-	          .getItems()
-	          .forEach(resource -> {
-	                cache.put(resource.getMetadata().getUid(), resource);
-	                String uid = resource.getMetadata().getUid();
-	                executor.execute(() -> callback.accept(Watcher.Action.ADDED, uid));
-	              }
-	          );
+			// list
+			System.out.println("Executing list and watch");
+			crClient.list().getItems().forEach(resource -> {System.out.println(resource.toString());});
+			crClient
+			.list()
+			.getItems()
+			.forEach(resource -> {
+				if(!cache.containsValue(resource)) {
+					cache.put(resource.getMetadata().getUid(), resource);
+					String uid = resource.getMetadata().getUid();
+					executor.execute(() -> callback.accept(Watcher.Action.ADDED, uid));
+				}else {
+					ExampleResource old = cache.get(resource.getMetadata().getUid());
+					if(!old.equals(resource)) {
+						cache.remove(old.getMetadata().getUid());
+						cache.put(resource.getMetadata().getUid(),resource);
+						executor.execute(() -> callback.accept(Watcher.Action.MODIFIED, resource.getMetadata().getUid()));
+					}
+				}
 
-	      // watch
+			}
+					);
 
-	      crClient.watch(new Watcher<ExampleResource>() {
-	        @Override
-	        public void eventReceived(Action action, ExampleResource resource) {
-	          try {
-	            String uid = resource.getMetadata().getUid();
-	            if (cache.containsKey(uid)) {
-	              int knownResourceVersion = Integer.parseInt(cache.get(uid).getMetadata().getResourceVersion());
-	              int receivedResourceVersion = Integer.parseInt(resource.getMetadata().getResourceVersion());
-	              if (knownResourceVersion > receivedResourceVersion) {
-	                return;
-	              }
-	            }
-	            System.out.println("received " + action + " for resource " + resource);
-	            if (action == Action.ADDED || action == Action.MODIFIED) {
-	              cache.put(uid, resource);
-	            } else if (action == Action.DELETED) {
-	              cache.remove(uid);
-	            } else {
-	              System.err.println("Received unexpected " + action + " event for " + resource);
-	              System.exit(-1);
-	            }
-	            executor.execute(() -> callback.accept(action, uid));
-	          } catch (Exception e) {
-	            e.printStackTrace();
-	            System.exit(-1);	
-	          }
-	        }
+			// watch
 
-	        @Override
-	        public void onClose(KubernetesClientException cause) {
-	          cause.printStackTrace();
-	          System.exit(-1);
-	        }
-	      });
-	    } catch (Exception e) {
-	      e.printStackTrace();
-	      System.exit(-1);
-	    }
-	  }
+			crClient.watch(new Watcher<ExampleResource>() {
+				@Override
+				public void eventReceived(Action action, ExampleResource resource) {
+					try {
+						String uid = resource.getMetadata().getUid();
+						if (cache.containsKey(uid)) {
+							int knownResourceVersion = Integer.parseInt(cache.get(uid).getMetadata().getResourceVersion());
+							int receivedResourceVersion = Integer.parseInt(resource.getMetadata().getResourceVersion());
+							if (knownResourceVersion > receivedResourceVersion) {
+								return;
+							}
+						}
+						System.out.println("received " + action + " for resource " + resource);
+						if (action == Action.ADDED || action == Action.MODIFIED) {
+							cache.put(uid, resource);
+						} else if (action == Action.DELETED) {
+							cache.remove(uid);
+						} else {
+							System.err.println("Received unexpected " + action + " event for " + resource);
+							System.exit(-1);
+						}
+						executor.execute(() -> callback.accept(action, uid));
+					} catch (Exception e) {
+						e.printStackTrace();
+						System.exit(-1);	
+					}
+				}
+
+				@Override
+				public void onClose(KubernetesClientException cause) {
+					cause.printStackTrace();
+					System.exit(-1);
+				}
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+	}
 
 }

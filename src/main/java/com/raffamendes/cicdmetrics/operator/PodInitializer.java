@@ -1,14 +1,17 @@
 package com.raffamendes.cicdmetrics.operator;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.raffamendes.cicdmetrics.operator.cache.ExampleResourceCache;
 import com.raffamendes.cicdmetrics.operator.cr.ExampleResource;
-import com.raffamendes.cicdmetrics.operator.util.LoadPodSpec;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -26,10 +29,6 @@ public class PodInitializer {
 	@Inject
 	private ExampleResourceCache cache;
 	
-	@Inject
-	private LoadPodSpec podLoader;
-
-
 	void onStartUp(@Observes StartupEvent _ev) {
 		new Thread(this::runReconcile).start();
 	}
@@ -53,8 +52,9 @@ public class PodInitializer {
 	}
 	
 	
-	private void createMessagePod(ExampleResource resource) {
-		Pod p = podLoader.instantiatePod(resource.getSpec().getNamespace());
+	private void createMessagePod(ExampleResource resource) throws JsonParseException, JsonMappingException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		Pod p = mapper.readValue(getClass().getResourceAsStream("/pod.json"), Pod.class);
 		EnvVar var = new EnvVar();
 		var.setName("MESSAGE");
 		var.setValue(String.join(" ", resource.getSpec().getMessageParts()));

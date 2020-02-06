@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "generateName": "quarkus-operator-example-"
+  },
+  "spec": {
+    "containers": [
+      {
+        "name": "quarkus-operator-example",
+        "image": "https://quay.io/repository/rcmendes/echo-container",
+        "imagePullPolicy": "Always",
+        "command": [
+          "echo"
+        ],
+        "args": [
+          "$MESSAGE"
+        ]
+      }
+    ]
+  }
+}
